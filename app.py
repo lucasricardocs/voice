@@ -10,499 +10,581 @@ import io
 # CONFIGURAÇÃO INICIAL
 # ================================================
 st.set_page_config(
-    page_title="Leitor PDF com Voz",
-    page_icon="📖",
+    page_title="Natural Reader - PDF to Speech",
+    page_icon="🎙️",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 # ================================================
-# CSS PREMIUM - 200+ LINHAS DE ESTILO ANIMADO
+# CSS CLEAN E PROFISSIONAL - Estilo Natural Reader
 # ================================================
 def inject_custom_css():
     st.markdown("""
     <style>
-    /* ===== 1. ANIMAÇÕES GLOBAIS ===== */
-    @keyframes gradientBG {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-    }
-    
-    @keyframes gradientText {
-        0%, 100% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-    }
-    
-    @keyframes float {
-        0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-        10% { opacity: 1; }
-        90% { opacity: 1; }
-        100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
-    }
-    
-    @keyframes pulse {
-        0% { box-shadow: 0 0 0 0 rgba(255,107,107,0.7); }
-        70% { box-shadow: 0 0 0 20px rgba(255,107,107,0); }
-        100% { box-shadow: 0 0 0 0 rgba(255,107,107,0); }
-    }
-    
-    @keyframes slideInLeft {
-        from {
-            opacity: 0;
-            transform: translateX(-50px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-    
-    @keyframes slideInRight {
-        from {
-            opacity: 0;
-            transform: translateX(50px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-    
-    @keyframes glow {
-        0%, 100% { text-shadow: 0 0 10px rgba(76,175,80,0.5); }
-        50% { text-shadow: 0 0 30px rgba(76,175,80,1); }
-    }
-    
-    /* ===== 2. FUNDO ANIMADO E PARTÍCULAS ===== */
+    /* ===== RESET E FUNDO ===== */
     * {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    
-    .main {
-        background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab, #ee7752);
-        background-size: 400% 400%;
-        animation: gradientBG 15s ease infinite;
-        min-height: 100vh;
+        margin: 0;
+        padding: 0;
     }
     
     .stApp {
-        background: transparent !important;
+        background-color: #f8f9fa !important;
     }
     
-    .particles {
-        position: fixed;
+    .main {
+        background-color: #f8f9fa !important;
+    }
+    
+    /* ===== NAVBAR FIXA ===== */
+    .navbar {
+        position: sticky;
         top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: -1;
-        pointer-events: none;
-    }
-    
-    .particle {
-        position: absolute;
-        background: rgba(255,255,255,0.1);
-        border-radius: 50%;
-        animation: float 20s infinite linear;
-    }
-    
-    /* ===== 3. GLASSMORPHISM - CARDS TRANSPARENTES ===== */
-    .glass-card {
-        background: rgba(255, 255, 255, 0.1) !important;
-        backdrop-filter: blur(20px) !important;
-        -webkit-backdrop-filter: blur(20px) !important;
-        border-radius: 20px !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        box-shadow: 0 25px 45px rgba(0,0,0,0.1) !important;
-        padding: 2rem !important;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
-        animation: slideInLeft 0.6s ease-out;
-    }
-    
-    .glass-card:hover {
-        transform: translateY(-10px) !important;
-        box-shadow: 0 35px 60px rgba(0,0,0,0.2) !important;
-        background: rgba(255, 255, 255, 0.15) !important;
-    }
-    
-    /* ===== 4. SIDEBAR GLASS ===== */
-    .css-1d391kg {
-        background: rgba(255, 255, 255, 0.08) !important;
-        backdrop-filter: blur(20px) !important;
-        -webkit-backdrop-filter: blur(20px) !important;
-        border-radius: 20px !important;
-        border: 1px solid rgba(255,255,255,0.2) !important;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important;
-    }
-    
-    /* ===== 5. TITULO PRINCIPAL ANIMADO ===== */
-    .title-main {
-        background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
-        background-clip: text;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-size: 300% 300%;
-        animation: gradientText 3s ease infinite;
-        font-size: 3.5rem;
-        font-weight: 900;
-        text-align: center;
-        margin-bottom: 1rem;
-        letter-spacing: 2px;
-        text-shadow: 0 0 30px rgba(255,255,255,0.5);
-    }
-    
-    .subtitle-main {
-        text-align: center;
-        font-size: 1.3rem;
-        color: rgba(255,255,255,0.9);
+        background: white;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 1.5rem 2rem;
         margin-bottom: 2rem;
-        animation: slideInRight 0.8s ease-out;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        z-index: 100;
     }
     
-    /* ===== 6. BOTÕES NEON ANIMADOS ===== */
-    .btn-neon {
-        background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
-        background-size: 300% 300%;
-        border: 2px solid rgba(255,255,255,0.3);
-        border-radius: 50px;
-        padding: 1rem 2.5rem;
-        font-size: 1.2rem;
-        font-weight: bold;
-        color: white;
-        cursor: pointer;
-        position: relative;
-        overflow: hidden;
+    .navbar h1 {
+        color: #1a73e8 !important;
+        font-size: 2rem !important;
+        margin: 0 !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.5px !important;
+    }
+    
+    .navbar p {
+        color: #5f6368 !important;
+        font-size: 0.95rem !important;
+        margin: 0.5rem 0 0 0 !important;
+    }
+    
+    /* ===== CONTAINERS ===== */
+    .card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e8eaed;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
         transition: all 0.3s ease;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     }
     
-    .btn-neon:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-        animation: pulse 1.5s infinite;
+    .card:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        border-color: #dadce0;
     }
     
-    .btn-neon:active {
-        transform: translateY(-1px);
+    /* ===== TÍTULOS ===== */
+    h1, h2, h3, h4, h5, h6 {
+        color: #202124 !important;
+        font-weight: 700 !important;
+        margin-bottom: 1rem !important;
+        letter-spacing: -0.3px !important;
     }
     
-    /* ===== 7. INPUTS E SELECTS ===== */
+    h2 {
+        font-size: 1.5rem !important;
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 0.75rem !important;
+    }
+    
+    h3 {
+        font-size: 1.2rem !important;
+        color: #202124 !important;
+    }
+    
+    /* ===== TEXTOS ===== */
+    p, span, label, li {
+        color: #5f6368 !important;
+        line-height: 1.6;
+    }
+    
+    b, strong {
+        color: #202124 !important;
+        font-weight: 600;
+    }
+    
+    /* ===== TEXTAREA ESTILIZADA ===== */
+    .stTextArea > div > div > textarea {
+        background: white !important;
+        border: 1px solid #dadce0 !important;
+        border-radius: 8px !important;
+        color: #202124 !important;
+        font-size: 1rem !important;
+        line-height: 1.6 !important;
+        padding: 1rem !important;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+    }
+    
+    .stTextArea > div > div > textarea:focus {
+        border-color: #1a73e8 !important;
+        box-shadow: 0 1px 6px rgba(26, 115, 232, 0.3) !important;
+    }
+    
+    /* ===== SELECTBOX E RADIO ===== */
     .stSelectbox > div > div > div,
-    .stRadio > div > div {
-        background: rgba(255,255,255,0.1) !important;
-        backdrop-filter: blur(15px) !important;
-        border-radius: 15px !important;
-        border: 1px solid rgba(255,255,255,0.3) !important;
-        color: white !important;
+    .stRadio > div > div,
+    .stRadio > div > label {
+        background: white !important;
+        border-radius: 8px !important;
+        color: #202124 !important;
+    }
+    
+    .stSelectbox > div > div > div {
+        border: 1px solid #dadce0 !important;
+        padding: 0.75rem !important;
+    }
+    
+    .stSelectbox > div > div > div:focus-within {
+        border-color: #1a73e8 !important;
+        box-shadow: 0 1px 6px rgba(26, 115, 232, 0.2) !important;
+    }
+    
+    /* ===== FILE UPLOADER ===== */
+    .stFileUploader {
+        border-radius: 12px !important;
     }
     
     .stFileUploader > div > div > div > button {
-        background: linear-gradient(135deg, #4CAF50, #45a049) !important;
+        background: linear-gradient(135deg, #1a73e8 0%, #1967d2 100%) !important;
         color: white !important;
-        border-radius: 50px !important;
-        font-weight: bold !important;
-        transition: all 0.3s ease !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 0.75rem 1.5rem !important;
+        font-weight: 600 !important;
+        font-size: 0.95rem !important;
+        cursor: pointer !important;
+        box-shadow: 0 2px 4px rgba(26, 115, 232, 0.3) !important;
+        transition: all 0.2s ease !important;
     }
     
     .stFileUploader > div > div > div > button:hover {
-        transform: translateY(-3px) !important;
-        box-shadow: 0 10px 25px rgba(76,175,80,0.4) !important;
+        background: linear-gradient(135deg, #1967d2 0%, #1557c0 100%) !important;
+        box-shadow: 0 4px 8px rgba(26, 115, 232, 0.4) !important;
+        transform: translateY(-1px) !important;
     }
     
-    /* ===== 8. COLUNAS E LAYOUT ===== */
-    [data-testid="column"] {
-        animation: slideInLeft 0.6s ease-out;
+    /* ===== BOTÕES PRIMÁRIOS ===== */
+    .stButton > button {
+        background: linear-gradient(135deg, #1a73e8 0%, #1967d2 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 0.85rem 2rem !important;
+        font-weight: 600 !important;
+        font-size: 1rem !important;
+        cursor: pointer !important;
+        box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3) !important;
+        transition: all 0.3s ease !important;
     }
     
-    [data-testid="column"]:nth-child(2) {
-        animation: slideInRight 0.6s ease-out;
+    .stButton > button:hover {
+        background: linear-gradient(135deg, #1967d2 0%, #1557c0 100%) !important;
+        box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4) !important;
+        transform: translateY(-2px) !important;
     }
     
-    /* ===== 9. SUCCESS/ERROR/INFO BOXES ===== */
+    .stButton > button:active {
+        transform: translateY(0) !important;
+    }
+    
+    /* ===== BOTÕES SECUNDÁRIOS ===== */
+    .btn-secondary {
+        background: white !important;
+        color: #1a73e8 !important;
+        border: 1px solid #dadce0 !important;
+        border-radius: 8px !important;
+        padding: 0.75rem 1.5rem !important;
+        font-weight: 600 !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    .btn-secondary:hover {
+        background: #f8f9fa !important;
+        border-color: #1a73e8 !important;
+        box-shadow: 0 2px 6px rgba(26, 115, 232, 0.2) !important;
+    }
+    
+    /* ===== AUDIO PLAYER ===== */
+    .stAudio {
+        background: white !important;
+        border-radius: 12px !important;
+        border: 1px solid #e8eaed !important;
+        padding: 1.5rem !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
+    }
+    
+    /* ===== ALERTS ===== */
     .stSuccess {
-        background: rgba(76,175,80,0.1) !important;
-        backdrop-filter: blur(10px) !important;
-        border-radius: 15px !important;
-        border-left: 4px solid #4CAF50 !important;
+        background: #e6f4ea !important;
+        border-left: 4px solid #34a853 !important;
+        border-radius: 8px !important;
+        padding: 1rem !important;
     }
     
     .stError {
-        background: rgba(244,67,54,0.1) !important;
-        backdrop-filter: blur(10px) !important;
-        border-radius: 15px !important;
-        border-left: 4px solid #f44336 !important;
+        background: #fce8e6 !important;
+        border-left: 4px solid #d33b27 !important;
+        border-radius: 8px !important;
+        padding: 1rem !important;
     }
     
     .stInfo {
-        background: rgba(33,150,243,0.1) !important;
-        backdrop-filter: blur(10px) !important;
-        border-radius: 15px !important;
-        border-left: 4px solid #2196F3 !important;
+        background: #e8f0fe !important;
+        border-left: 4px solid #1a73e8 !important;
+        border-radius: 8px !important;
+        padding: 1rem !important;
     }
     
-    /* ===== 10. PLAYER DE ÁUDIO ===== */
-    .stAudio {
-        background: rgba(255,255,255,0.1) !important;
-        backdrop-filter: blur(15px) !important;
-        border-radius: 20px !important;
-        padding: 1.5rem !important;
-        border: 1px solid rgba(255,255,255,0.2) !important;
+    .stWarning {
+        background: #fef7e0 !important;
+        border-left: 4px solid #f9ab00 !important;
+        border-radius: 8px !important;
+        padding: 1rem !important;
     }
     
-    /* ===== 11. SEÇÃO DE DESTAQUE ===== */
-    .highlight-section {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(20px);
-        border-radius: 20px;
-        border: 2px solid rgba(76,175,80,0.3);
-        padding: 2rem;
-        margin: 2rem 0;
+    /* ===== SPINNER ===== */
+    .stSpinner {
+        text-align: center;
     }
     
-    /* ===== 12. SPINNER CUSTOMIZADO ===== */
     .stSpinner > div {
-        border-color: rgba(76,175,80,0.3) !important;
-        border-top-color: #4CAF50 !important;
+        border-color: rgba(26, 115, 232, 0.2) !important;
+        border-top-color: #1a73e8 !important;
     }
     
-    /* ===== 13. DIVIDER ===== */
+    /* ===== TABS ===== */
+    .stTabs > div > div > button {
+        border-bottom: 3px solid transparent !important;
+        color: #5f6368 !important;
+        font-weight: 600 !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    .stTabs > div > div > button[aria-selected="true"] {
+        border-bottom-color: #1a73e8 !important;
+        color: #1a73e8 !important;
+    }
+    
+    /* ===== DIVIDER ===== */
     hr {
-        border: 0;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-        margin: 2rem 0;
+        border: none !important;
+        height: 1px !important;
+        background: #e8eaed !important;
+        margin: 2rem 0 !important;
     }
     
-    /* ===== 14. TEXTOS ===== */
-    h1, h2, h3, h4, h5, h6 {
-        color: rgba(255,255,255,0.95) !important;
+    /* ===== GRID LAYOUT ===== */
+    [data-testid="column"] {
+        padding: 0 1rem;
     }
     
-    p, span, label, li {
-        color: rgba(255,255,255,0.85) !important;
+    [data-testid="column"]:first-child {
+        padding-left: 0;
     }
     
-    /* ===== 15. RESPONSIVIDADE ===== */
+    [data-testid="column"]:last-child {
+        padding-right: 0;
+    }
+    
+    /* ===== FOOTER ===== */
+    .footer {
+        text-align: center;
+        padding: 3rem 2rem;
+        border-top: 1px solid #e8eaed;
+        color: #5f6368 !important;
+        font-size: 0.9rem;
+        margin-top: 3rem;
+    }
+    
+    .footer a {
+        color: #1a73e8 !important;
+        text-decoration: none;
+    }
+    
+    .footer a:hover {
+        text-decoration: underline;
+    }
+    
+    /* ===== DESTAQUE DE TEXTO ===== */
+    #texto-destacado {
+        background: white;
+        border: 1px solid #e8eaed;
+        border-radius: 8px;
+        padding: 1.5rem;
+        font-size: 1.05rem;
+        line-height: 1.8;
+        color: #202124;
+        min-height: 250px;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    #texto-destacado span {
+        background: linear-gradient(120deg, #ffd700, #ffed4e);
+        color: #333 !important;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    /* ===== INFO BOX ===== */
+    .info-box {
+        background: #f1f3f4;
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1rem 0;
+        border-left: 4px solid #1a73e8;
+    }
+    
+    .info-box p {
+        margin: 0.25rem 0 !important;
+        color: #202124 !important;
+    }
+    
+    /* ===== RESPONSIVIDADE ===== */
     @media (max-width: 768px) {
-        .title-main {
-            font-size: 2.5rem;
+        .navbar {
+            padding: 1rem;
         }
         
-        .glass-card {
-            padding: 1.5rem !important;
+        .navbar h1 {
+            font-size: 1.5rem !important;
         }
         
-        .btn-neon {
-            font-size: 1rem;
-            padding: 0.75rem 1.5rem;
+        .card {
+            padding: 1rem;
+        }
+        
+        h2 {
+            font-size: 1.3rem !important;
+        }
+        
+        .stButton > button {
+            padding: 0.75rem 1.5rem !important;
+            font-size: 0.9rem !important;
         }
     }
     </style>
-    
-    <!-- Partículas flutuantes -->
-    <div class="particles" id="particles"></div>
-    
-    <script>
-    // Gera partículas flutuantes
-    function createParticles() {
-        const particlesContainer = document.getElementById('particles');
-        if (!particlesContainer) return;
-        
-        for(let i = 0; i < 50; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'particle';
-            particle.style.left = Math.random() * 100 + '%';
-            particle.style.width = particle.style.height = (Math.random() * 4 + 1) + 'px';
-            particle.style.animationDelay = Math.random() * 20 + 's';
-            particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
-            particlesContainer.appendChild(particle);
-        }
-    }
-    createParticles();
-    </script>
     """, unsafe_allow_html=True)
 
-# Injeta CSS no início
 inject_custom_css()
 
 # ================================================
-# CONTEÚDO PRINCIPAL
+# NAVBAR
 # ================================================
-
-# Título animado
-st.markdown('<h1 class="title-main">🎙️ Leitor PDF Premium</h1>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle-main">Transforme seu PDF em áudio com vozes neurais incríveis ✨</p>', unsafe_allow_html=True)
-st.markdown("---")
-
-# --- Sidebar com configurações ---
-st.sidebar.header("🎤 Configurações de Voz")
-
-# Vozes pt-BR disponíveis (edge-tts)
-vozes = {
-    "👨 Masculina": {
-        "Antônio": "pt-BR-AntonioNeural",
-        "Arnaldo": "pt-BR-ArnaldoNeural"
-    },
-    "👩 Feminina": {
-        "Francisca": "pt-BR-FranciscaNeural",
-        "Thalita": "pt-BR-ThalitaNeural",
-        "Vitória": "pt-BR-VitoriaNeural"
-    }
-}
-
-tipo_voz = st.sidebar.radio("Gênero da voz:", list(vozes.keys()))
-vozes_disponiveis = vozes[tipo_voz]
-voz_label = st.sidebar.selectbox("Voz:", list(vozes_disponiveis.keys()))
-VOICE = vozes_disponiveis[voz_label]
-
-# Velocidade como multiplicador 1.0x até 2.0x
-velocidade_x = st.sidebar.selectbox(
-    "Velocidade da leitura:",
-    ["1.0x (normal)", "1.2x (rápida)", "1.5x (muito rápida)", "2.0x (super rápida)"],
-    index=0
-)
-
-# Mapeia para formato edge-tts válido
-velocidades = {
-    "1.0x (normal)": "0%",
-    "1.2x (rápida)": "20%",
-    "1.5x (muito rápida)": "50%",
-    "2.0x (super rápida)": "100%"
-}
-RATE = velocidades[velocidade_x]
-
-st.sidebar.markdown("---")
-st.sidebar.markdown("""
-    <div style="text-align: center; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 15px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);">
-        <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 0.9rem;">
-            <b>Feito com ❤️ por IA</b><br>
-            <b>100% Gratuito</b><br>
-            <b>Código aberto</b>
-        </p>
-    </div>
+st.markdown("""
+<div class="navbar">
+    <h1>🎙️ Natural Reader</h1>
+    <p>Converta PDF e Texto em Áudio com Vozes Neurais em Português do Brasil</p>
+</div>
 """, unsafe_allow_html=True)
 
-# --- Upload PDF e Info ---
-col1, col2 = st.columns([1, 3])
+# ================================================
+# LAYOUT PRINCIPAL
+# ================================================
+col_left, col_right = st.columns([2, 1], gap="large")
 
-with col1:
-    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.markdown('<h3 style="color: white; text-align: center;">📁 Upload PDF</h3>', unsafe_allow_html=True)
-    arquivo_pdf = st.file_uploader("", type=["pdf"], label_visibility="collapsed")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-with col2:
-    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.markdown('<h3 style="color: white;">✨ Como usar</h3>', unsafe_allow_html=True)
-    st.markdown("""
-    <ol style="color: rgba(255,255,255,0.9);">
-        <li><b>Upload do PDF</b> - Selecione seu arquivo</li>
-        <li><b>Escolha voz</b> - Masculina ou feminina</li>
-        <li><b>Ajuste velocidade</b> - De 1.0x até 2.0x</li>
-        <li><b>Clique em Gerar</b> - Aguarde a magia acontecer ✨</li>
-        <li><b>Escute e acompanhe</b> - Com destaque de texto</li>
-    </ol>
-    """, unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-st.markdown("---")
-
-# --- Processar PDF ---
-texto_pdf = ""
-num_paginas = 0
-
-if arquivo_pdf is not None:
-    arquivo_pdf.seek(0)
-    reader = PyPDF2.PdfReader(io.BytesIO(arquivo_pdf.read()))
+# ===== COLUNA ESQUERDA =====
+with col_left:
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    
+    st.markdown('<h2>📝 Seu Texto ou PDF</h2>', unsafe_allow_html=True)
+    
+    # Tabs
+    tab1, tab2 = st.tabs(["✏️ Digitar Texto", "📄 Upload PDF"])
+    
     texto_pdf = ""
-    for pagina in reader.pages:
-        texto_pdf += pagina.extract_text() + "\n"
+    num_paginas = 0
     
-    num_palavras = len(texto_pdf.split())
-    num_paginas = len(reader.pages)
-    
-    st.markdown(f"""
-    <div class="glass-card">
-        <h3 style="color: white;">✅ PDF Carregado com Sucesso!</h3>
-        <p style="color: #4ecdc4; font-size: 1.2rem; margin: 0;">
-            📊 <b>{num_palavras:,}</b> palavras | 
-            📄 <b>{num_paginas}</b> páginas | 
-            📝 Pronto para conversão
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-
-# --- Botão NEON para gerar áudio ---
-if texto_pdf.strip():
-    col_btn1, col_btn2, col_btn3 = st.columns([2, 2, 2])
-    
-    with col_btn2:
-        btn_click = st.button(
-            "🔮 Gerar Áudio Mágico",
-            key="btn_generate",
-            use_container_width=True,
-            help="Clique para converter o PDF em áudio com IA"
+    with tab1:
+        st.markdown('<p style="color: #5f6368; margin-bottom: 0.5rem;"><b>Cole ou digite seu texto:</b></p>', unsafe_allow_html=True)
+        texto_pdf = st.text_area(
+            "Texto",
+            height=350,
+            placeholder="Digite seu texto aqui ou cole conteúdo de um artigo, documento, etc...",
+            label_visibility="collapsed"
         )
     
-    # --- Gerar áudio ---
-    audio_bytes = None
-    if btn_click:
-        with st.spinner(f"🎵 Gerando áudio com {voz_label} ({velocidade_x})..."):
-            try:
-                async def gerar_audio(texto):
-                    communicate = edge_tts.Communicate(texto, VOICE, rate=RATE)
-                    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
-                        await communicate.save(fp.name)
-                        return fp.name
-                
-                audio_path = asyncio.run(gerar_audio(texto_pdf))
-                with open(audio_path, "rb") as f:
-                    audio_bytes = f.read()
-                os.unlink(audio_path)
-                st.balloons()
-            except Exception as e:
-                st.error(f"❌ Erro ao gerar áudio: **{str(e)}**")
-                st.info("💡 Dica: Tente com um PDF menor ou uma velocidade diferente")
+    with tab2:
+        st.markdown('<p style="color: #5f6368; margin-bottom: 0.5rem;"><b>Selecione um arquivo PDF:</b></p>', unsafe_allow_html=True)
+        arquivo_pdf = st.file_uploader("", type=["pdf"], label_visibility="collapsed")
+        
+        if arquivo_pdf is not None:
+            arquivo_pdf.seek(0)
+            reader = PyPDF2.PdfReader(io.BytesIO(arquivo_pdf.read()))
+            texto_pdf = ""
+            for pagina in reader.pages:
+                texto_pdf += pagina.extract_text() + "\n"
+            
+            num_paginas = len(reader.pages)
+            num_palavras = len(texto_pdf.split())
+            
+            st.success(f"✅ PDF carregado com sucesso! **{num_palavras:,}** palavras | **{num_paginas}** páginas")
     
-    # --- Player de áudio (armazenado em session_state) ---
-    if "audio_bytes" not in st.session_state:
-        st.session_state.audio_bytes = None
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# ===== COLUNA DIREITA =====
+with col_right:
+    st.markdown('<div class="card">', unsafe_allow_html=True)
     
-    if audio_bytes:
-        st.session_state.audio_bytes = audio_bytes
+    st.markdown('<h2 style="border: none; padding: 0; margin-bottom: 1.5rem;">🎚️ Configurações</h2>', unsafe_allow_html=True)
     
-    if st.session_state.audio_bytes:
-        st.markdown("<h3 style='text-align: center; color: white;'>🎧 Seu Áudio</h3>", unsafe_allow_html=True)
-        st.audio(st.session_state.audio_bytes, format="audio/mp3")
+    # Gênero da voz
+    st.markdown('<p style="color: #202124; font-weight: 600; margin-bottom: 0.75rem;">👥 Gênero da Voz</p>', unsafe_allow_html=True)
+    tipo_voz = st.radio("", ["👨 Masculina", "👩 Feminina"], label_visibility="collapsed")
+    
+    # Vozes disponíveis
+    vozes = {
+        "👨 Masculina": {
+            "🎤 Antônio": "pt-BR-AntonioNeural",
+            "🎤 Arnaldo": "pt-BR-ArnaldoNeural"
+        },
+        "👩 Feminina": {
+            "🎤 Francisca": "pt-BR-FranciscaNeural",
+            "🎤 Thalita": "pt-BR-ThalitaNeural",
+            "🎤 Vitória": "pt-BR-VitoriaNeural"
+        }
+    }
+    
+    # Selectbox de voz
+    st.markdown('<p style="color: #202124; font-weight: 600; margin: 1.5rem 0 0.75rem;">🎙️ Voz</p>', unsafe_allow_html=True)
+    vozes_disponiveis = vozes[tipo_voz]
+    voz_label = st.selectbox("Voz", list(vozes_disponiveis.keys()), label_visibility="collapsed")
+    VOICE = vozes_disponiveis[voz_label]
+    
+    # Velocidade
+    st.markdown('<p style="color: #202124; font-weight: 600; margin: 1.5rem 0 0.75rem;">⚡ Velocidade</p>', unsafe_allow_html=True)
+    velocidade_x = st.selectbox(
+        "Velocidade",
+        ["1.0x (normal)", "1.2x (rápida)", "1.5x (muito rápida)", "2.0x (super rápida)"],
+        label_visibility="collapsed"
+    )
+    
+    velocidades = {
+        "1.0x (normal)": "0%",
+        "1.2x (rápida)": "20%",
+        "1.5x (muito rápida)": "50%",
+        "2.0x (super rápida)": "100%"
+    }
+    RATE = velocidades[velocidade_x]
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("---")
 
-# --- Destaque de texto ---
-if texto_pdf:
-    st.markdown("<h3 style='color: white;'>📄 Acompanhe o Texto com Destaque em Tempo Real</h3>", unsafe_allow_html=True)
+# ================================================
+# SEÇÃO DE GERAÇÃO E PLAYER
+# ================================================
+if texto_pdf.strip():
+    col_audio1, col_audio2 = st.columns([2, 1], gap="large")
     
-    # Calcula velocidade para destaque
+    with col_audio1:
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        
+        st.markdown('<h2>🔊 Seu Áudio</h2>', unsafe_allow_html=True)
+        
+        # Session state
+        if "audio_bytes" not in st.session_state:
+            st.session_state.audio_bytes = None
+        
+        # Botão para gerar
+        col_btn1, col_btn2 = st.columns([3, 1])
+        
+        with col_btn1:
+            btn_generate = st.button(
+                "🎵 Gerar Áudio",
+                use_container_width=True,
+                key="btn_generate"
+            )
+        
+        if btn_generate:
+            with st.spinner("🎵 Processando áudio com IA..."):
+                try:
+                    async def gerar_audio(texto):
+                        communicate = edge_tts.Communicate(texto, VOICE, rate=RATE)
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
+                            await communicate.save(fp.name)
+                            return fp.name
+                    
+                    audio_path = asyncio.run(gerar_audio(texto_pdf))
+                    with open(audio_path, "rb") as f:
+                        st.session_state.audio_bytes = f.read()
+                    os.unlink(audio_path)
+                    st.success("✅ Áudio gerado com sucesso!")
+                except Exception as e:
+                    st.error(f"❌ Erro: {str(e)}")
+                    st.info("💡 Tente com um texto menor ou velocidade diferente")
+        
+        # Player de áudio
+        if st.session_state.audio_bytes:
+            st.markdown('<p style="margin-top: 1.5rem; margin-bottom: 0.5rem; color: #202124; font-weight: 600;">Player:</p>', unsafe_allow_html=True)
+            st.audio(st.session_state.audio_bytes, format="audio/mp3")
+            
+            # Download
+            st.download_button(
+                label="⬇️ Baixar MP3",
+                data=st.session_state.audio_bytes,
+                file_name="audio_naturalreader.mp3",
+                mime="audio/mpeg",
+                use_container_width=True
+            )
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col_audio2:
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        
+        st.markdown('<h3 style="border: none; margin-bottom: 1rem;">📊 Resumo</h3>', unsafe_allow_html=True)
+        
+        st.markdown(f"""
+        <div class="info-box">
+            <p><b>Voz:</b> {voz_label.replace('🎤 ', '')}</p>
+            <p><b>Velocidade:</b> {velocidade_x}</p>
+            <p><b>Palavras:</b> {len(texto_pdf.split()):,}</p>
+            <p><b>Caracteres:</b> {len(texto_pdf):,}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+
+st.markdown("---")
+
+# ================================================
+# SEÇÃO DE DESTAQUE
+# ================================================
+if texto_pdf.strip():
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    
+    st.markdown('<h2>📄 Acompanhe a Leitura com Destaque</h2>', unsafe_allow_html=True)
+    
     multiplicadores = {
-        "1.0x (normal)": 1.0, 
-        "1.2x (rápida)": 1.2, 
-        "1.5x (muito rápida)": 1.5, 
+        "1.0x (normal)": 1.0,
+        "1.2x (rápida)": 1.2,
+        "1.5x (muito rápida)": 1.5,
         "2.0x (super rápida)": 2.0
     }
     base_wpm = 160
     wpm = base_wpm * multiplicadores[velocidade_x]
     ms_por_palavra = int(60000 / wpm)
     
-    # Limpa quebras de linha
     texto_limpo = texto_pdf.replace('\n', ' ').strip()
     
     st.markdown(f"""
     <div id="texto-original" style="display:none;">{texto_limpo}</div>
-    <div id="texto-destacado" style="padding: 2rem; border: 2px solid rgba(76,175,80,0.5); border-radius: 20px; max-height: 500px; overflow-y: auto; font-size: 1.3rem; line-height: 1.9; background: linear-gradient(135deg, rgba(245,247,250,0.1), rgba(195,207,226,0.1)); box-shadow: 0 8px 24px rgba(0,0,0,0.2); backdrop-filter: blur(10px);"></div>
+    <div id="texto-destacado">
+        <p style="text-align: center; color: #9aa0a6;">Clique em 'Iniciar Destaque' para acompanhar o texto</p>
+    </div>
     
-    <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: center;">
-        <button onclick="startHighlight()" class="btn-neon" style="width: auto;">▶️ Iniciar Destaque ({velocidade_x})</button>
-        <button onclick="stopHighlight()" style="width: auto; padding: 1rem 2.5rem; background: linear-gradient(135deg, #f44336, #d32f2f); color: white; border: 2px solid rgba(255,255,255,0.3); border-radius: 50px; font-size: 1.2rem; font-weight: bold; cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.3); transition: all 0.3s ease;">⏹️ Parar</button>
+    <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
+        <button class="stButton" onclick="startHighlight()" style="background: linear-gradient(135deg, #1a73e8 0%, #1967d2 100%); color: white; border: none; border-radius: 8px; padding: 0.85rem 2rem; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);">▶️ Iniciar Destaque ({velocidade_x})</button>
+        <button class="btn-secondary" onclick="stopHighlight()" style="background: white; color: #1a73e8; border: 1px solid #dadce0; border-radius: 8px; padding: 0.75rem 1.5rem; font-weight: 600; cursor: pointer;">⏹️ Parar</button>
     </div>
     
     <script>
@@ -521,7 +603,7 @@ if texto_pdf:
         const before = words.slice(0, index).join(" ");
         const current = words[index];
         const after = words.slice(index + 1).join(" ");
-        const html = `{{before}} <span style="background: linear-gradient(90deg, #FFD700, #FFA500); padding: 6px 10px; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 12px rgba(255,165,0,0.4);">{{current}}</span> {{after}}`;
+        const html = `${{before}} <span>${{current}}</span> ${{after}}`;
         document.getElementById("texto-destacado").innerHTML = html;
         document.getElementById("texto-destacado").scrollTop = document.getElementById("texto-destacado").scrollHeight * 0.3;
         index += 1;
@@ -542,15 +624,17 @@ if texto_pdf:
     }}
     </script>
     """, unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# --- Footer ---
-st.markdown("---")
+# ================================================
+# FOOTER
+# ================================================
 st.markdown("""
-<div style="text-align: center; padding: 2rem; background: rgba(255,255,255,0.05); border-radius: 15px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); margin-top: 3rem;">
-    <p style="color: rgba(255,255,255,0.7); margin: 0; font-size: 0.95rem;">
-        🌟 <b>Leitor PDF com Voz Neural</b> 🌟<br>
-        Desenvolvido com Streamlit + Edge-TTS + Python<br>
-        <b>100% Gratuito • Open Source • Hospedado no Streamlit Cloud</b>
-    </p>
+<div class="footer">
+    <p><b>🎙️ Natural Reader - PDF to Speech</b></p>
+    <p>Desenvolvido com Streamlit + Edge-TTS + Python</p>
+    <p><b>100% Gratuito • Open Source • Hospedado no Streamlit Cloud</b></p>
+    <p style="margin-top: 1rem; font-size: 0.85rem;">Vozes neurais em português do Brasil com qualidade premium</p>
 </div>
 """, unsafe_allow_html=True)
