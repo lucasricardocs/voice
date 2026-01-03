@@ -2,238 +2,195 @@ import streamlit as st
 import PyPDF2
 import asyncio
 import edge_tts
-import io
+import base64
+import json
 
 # ================================================
-# CONFIGURAÇÃO DE TEMA E PÁGINA
+# CONFIGURAÇÃO GERAL
 # ================================================
-st.set_page_config(
-    page_title="Pro Reader AI",
-    page_icon="🎙️",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
+st.set_page_config(page_title="Leitor Neural Pro", page_icon="🎧", layout="wide")
 
-def inject_ui_theme():
-    st.markdown("""
-    <style>
-    /* Global Dark Theme */
-    .stApp {
-        background-color: #0e1117 !important;
-        color: #e0e0e0 !important;
-    }
-    
-    /* Navbar Custom */
-    .nav-container {
-        background: #161b22;
-        padding: 1.5rem;
-        border-bottom: 2px solid #30363d;
-        border-radius: 0 0 20px 20px;
-        margin-bottom: 2rem;
-        text-align: center;
-    }
-    
-    /* Cards Estilizados */
-    .reader-card {
-        background: #161b22;
-        padding: 2rem;
-        border-radius: 15px;
+st.markdown("""
+<style>
+    .stApp { background-color: #0e1117; color: #e6e6e6; }
+    #text-container {
+        background-color: #161b22;
         border: 1px solid #30363d;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-    
-    /* Texto de Leitura */
-    #reading-area {
-        background: #1c2128;
-        border: 1px solid #444c56;
         border-radius: 10px;
         padding: 30px;
-        font-size: 1.3rem !important;
+        font-family: 'Segoe UI', sans-serif;
+        font-size: 1.25rem;
         line-height: 1.8;
-        color: #adbac7;
-        min-height: 300px;
-        max-height: 500px;
+        height: 500px;
         overflow-y: auto;
-        font-family: 'Inter', sans-serif;
+        white-space: pre-wrap;
+        color: #b0b8c4;
     }
-    
-    /* Highlight Style (Amarelo Natural Reader) */
-    .word-highlight {
+    .word { cursor: pointer; transition: background 0.1s; padding: 2px 0; border-radius: 3px; }
+    .word:hover { background-color: #21262d; }
+    .active-word {
         background-color: #f2cc60;
-        color: #1c2128;
-        padding: 2px 6px;
-        border-radius: 4px;
+        color: #0d1117;
         font-weight: 700;
-        transition: all 0.1s ease;
+        padding: 2px 4px;
+        box-shadow: 0 0 10px rgba(242, 204, 96, 0.3);
     }
-    
-    /* Botões */
-    .stButton>button {
-        width: 100%;
-        border-radius: 8px;
-        height: 3em;
-        background-color: #238636 !important;
-        border: none !important;
-        font-weight: bold !important;
+    /* Estilo da Barra de Progresso Customizada */
+    .stProgress > div > div > div > div {
+        background-color: #238636;
     }
-    
-    /* Inputs */
-    .stTextArea textarea {
-        background-color: #0d1117 !important;
-        color: #adbac7 !important;
-        border: 1px solid #30363d !important;
-    }
-    
-    h1, h2, h3 { color: #ffffff !important; }
-    </style>
-    """, unsafe_allow_html=True)
-
-inject_ui_theme()
-
-# ================================================
-# CABEÇALHO
-# ================================================
-st.markdown("""
-<div class="nav-container">
-    <h1 style='margin:0;'>🎙️ Pro Reader AI</h1>
-    <p style='color: #8b949e;'>Experiência de leitura premium com vozes neurais</p>
-</div>
+</style>
 """, unsafe_allow_html=True)
 
+st.title("🎧 Leitor Neural com Progresso Real")
+
 # ================================================
-# BARRA LATERAL (CONFIGS)
+# SIDEBAR
 # ================================================
 with st.sidebar:
-    st.header("⚙️ Configurações de Voz")
-    genero = st.radio("Voz", ["Feminina", "Masculina"])
+    st.header("Configurações")
+    uploaded_file = st.file_uploader("📂 Carregar PDF", type="pdf")
     
-    vozes_db = {
-        "Feminina": {"Francisca (Natural)": "pt-BR-FranciscaNeural", "Thalita (Suave)": "pt-BR-ThalitaNeural"},
-        "Masculina": {"Antônio (Claro)": "pt-BR-AntonioNeural", "Arnaldo (Profundo)": "pt-BR-ArnaldoNeural"}
-    }
-    
-    voz_selecionada = st.selectbox("Selecione a Voz", list(vozes_db[genero].keys()))
-    VOICE_ID = vozes_db[genero][voz_selecionada]
-    
-    # Velocidade de 1.0x a 2.0x
-    speed_option = st.select_slider("Velocidade da Leitura", options=["1.0x", "1.25x", "1.5x", "1.75x", "2.0x"])
-    
-    # Mapeamento para o motor TTS
-    rate_map = {"1.0x": "+0%", "1.25x": "+25%", "1.5x": "+50%", "1.75x": "+75%", "2.0x": "+100%"}
-    TTS_RATE = rate_map[speed_option]
+    voz = st.selectbox("🎙️ Voz", [
+        "pt-BR-FranciscaNeural (Feminina)",
+        "pt-BR-AntonioNeural (Masculina)",
+        "pt-BR-ThalitaNeural (Jovem)",
+    ])
+    voice_id = voz.split()[0]
+    rate_str = st.select_slider("⚡ Velocidade", options=["0%", "+25%", "+50%", "+75%", "+100%"], value="0%")
 
 # ================================================
-# ÁREA PRINCIPAL
+# LÓGICA PRINCIPAL
 # ================================================
-col_main, col_spacer = st.columns([1, 0.01]) # Centralizar conteúdo
+def extract_text(file):
+    reader = PyPDF2.PdfReader(file)
+    text = ""
+    for page in reader.pages:
+        t = page.extract_text()
+        if t: text += t + "\n\n"
+    return text
 
-with col_main:
-    # Upload e Input
-    with st.expander("📥 Importar Texto ou PDF", expanded=True):
-        input_type = st.tabs(["📄 PDF", "✏️ Texto Livre"])
-        input_text = ""
+if "processing_done" not in st.session_state:
+    st.session_state.processing_done = False
+
+if uploaded_file:
+    full_text = extract_text(uploaded_file)
+    total_chars = len(full_text)
+    
+    # Botão de Ação
+    if st.button("🚀 Gerar Áudio"):
+        progress_bar = st.progress(0, text="Iniciando conexão neural...")
+        status_text = st.empty()
         
-        with input_type[0]:
-            pdf_file = st.file_uploader("Arraste seu PDF aqui", type=["pdf"])
-            if pdf_file:
-                pdf_reader = PyPDF2.PdfReader(pdf_file)
-                input_text = " ".join([p.extract_text() for p in pdf_reader.pages])
+        async def generate_with_progress():
+            communicate = edge_tts.Communicate(full_text, voice_id, rate=rate_str)
+            audio_data = b""
+            timestamps = []
+            word_counter = 0
+            
+            # Loop assíncrono que recebe pedaços do áudio E metadados
+            async for chunk in communicate.stream():
+                if chunk["type"] == "audio":
+                    audio_data += chunk["data"]
                 
-        with input_type[1]:
-            input_text = st.text_area("Cole seu texto:", height=150, value=input_text)
-
-    if input_text:
-        # Ações de Áudio
-        st.markdown("<div class='reader-card'>", unsafe_allow_html=True)
-        c1, c2, c3 = st.columns([1, 1, 1])
-        
-        with c1:
-            btn_generate = st.button("🔊 Gerar Áudio")
-        
-        # Gerenciamento de Áudio
-        if btn_generate:
-            async def make_audio():
-                comm = edge_tts.Communicate(input_text, VOICE_ID, rate=TTS_RATE)
-                data = b""
-                async for chunk in comm.stream():
-                    if chunk["type"] == "audio":
-                        data += chunk["data"]
-                return data
-
-            with st.spinner("Sintetizando voz neural..."):
-                try:
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-                    st.session_state.audio_data = loop.run_until_complete(make_audio())
-                    st.success("Áudio pronto!")
-                except Exception as e:
-                    st.error(f"Erro no motor: {e}")
-
-        if "audio_data" in st.session_state:
-            with c2:
-                st.audio(st.session_state.audio_data)
-            with c3:
-                st.download_button("💾 Baixar MP3", st.session_state.audio_data, "leitura.mp3")
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-        # ÁREA DE LEITURA COM HIGHLIGHT
-        st.markdown("### 📖 Modo de Leitura")
-        
-        # Cálculo de tempo (WPM médio de 160)
-        speed_factor = float(speed_option.replace('x',''))
-        ms_word = int(60000 / (160 * speed_factor))
-        
-        # Limpeza para o JS
-        js_text = input_text.replace('\n', ' ').replace('"', '\\"').strip()
-        
-        st.markdown(f"""
-        <div id="reading-area">Aguardando início...</div>
-        
-        <div style="margin-top:20px; display:flex; gap:15px;">
-            <button onclick="playReader()" style="flex:2; padding:15px; background:#238636; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">▶ Iniciar Acompanhamento Visual</button>
-            <button onclick="stopReader()" style="flex:1; padding:15px; background:#da3633; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">⏹ Parar</button>
-        </div>
-
-        <script>
-            var text = "{js_text}";
-            var words = text.split(/\s+/);
-            var i = 0;
-            var timer = null;
-            var area = document.getElementById('reading-area');
-
-            window.playReader = function() {{
-                if(timer) clearInterval(timer);
-                i = 0;
-                timer = setInterval(function() {{
-                    if(i >= words.length) {{
-                        clearInterval(timer);
-                        return;
-                    }}
+                elif chunk["type"] == "WordBoundary":
+                    # CÁLCULO DO PROGRESSO
+                    # text_offset é a posição do caractere atual no texto
+                    current_char_pos = chunk["offset"] + chunk["duration"] # Simplificação
+                    # O edge-tts fornece 'text_offset' no objeto, vamos usar ele:
+                    # Nota: em algumas versões o atributo é acessado diretamente ou via dict
+                    # A estrutura segura é usar a posição relativa se disponível ou estimar
                     
-                    // Mostra o bloco de texto com a palavra atual destacada
-                    let html = words.slice(0, i).join(" ") + 
-                               " <span class='word-highlight'>" + words[i] + "</span> " + 
-                               words.slice(i + 1).join(" ");
+                    # O 'chunk' de WordBoundary tem: offset (audio), duration, text_offset, word_length
+                    t_offset = chunk.get("text_offset", 0)
+                    w_len = chunk.get("word_length", 0)
                     
-                    area.innerHTML = html;
-                    
-                    // Scroll inteligente: mantém a palavra em destaque visível
-                    let currentWord = document.querySelector('.word-highlight');
-                    if(currentWord) {{
-                        currentWord.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
-                    }}
-                    
-                    i++;
-                }}, {ms_word});
+                    # Atualiza a barra
+                    if total_chars > 0:
+                        percent = min((t_offset + w_len) / total_chars, 1.0)
+                        progress_bar.progress(percent, text=f"Sintetizando: {int(percent*100)}%")
+
+                    timestamps.append({
+                        "start": chunk["offset"] / 10_000_000,
+                        "end": (chunk["offset"] + chunk["duration"]) / 10_000_000,
+                        "word": chunk["text"],
+                        "index": word_counter
+                    })
+                    word_counter += 1
+            
+            return audio_data, timestamps
+
+        # Execução
+        try:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            audio_bytes, time_data = loop.run_until_complete(generate_with_progress())
+            
+            # Finaliza a barra
+            progress_bar.progress(100, text="Concluído! Carregando player...")
+            
+            # Salva no estado
+            st.session_state.audio_b64 = base64.b64encode(audio_bytes).decode()
+            st.session_state.timestamps = json.dumps(time_data)
+            
+            # Reconstrói HTML
+            html_parts = []
+            for item in time_data:
+                html_parts.append(f"<span id='w-{item['index']}' class='word'>{item['word']}</span>")
+            st.session_state.html_text = " ".join(html_parts)
+            
+            st.session_state.processing_done = True
+            st.rerun() # Recarrega para mostrar o player limpo
+            
+        except Exception as e:
+            st.error(f"Erro: {e}")
+
+# ================================================
+# PLAYER FINAL
+# ================================================
+if st.session_state.processing_done:
+    st.markdown(f"""
+    <div style="position:sticky; top:0; z-index:999; background:#0e1117; padding-bottom:10px;">
+        <audio id="player" controls autoplay style="width: 100%;">
+            <source src="data:audio/mp3;base64,{st.session_state.audio_b64}" type="audio/mp3">
+        </audio>
+    </div>
+    <div id="text-container">
+        {st.session_state.html_text}
+    </div>
+
+    <script>
+        const timestamps = {st.session_state.timestamps};
+        const player = document.getElementById('player');
+        
+        player.ontimeupdate = function() {{
+            const time = player.currentTime;
+            const activeItem = timestamps.find(item => time >= item.start && time <= item.end);
+            
+            if (activeItem) {{
+                // Remove destaque anterior (limpeza bruta mas eficaz)
+                document.querySelectorAll('.active-word').forEach(el => el.classList.remove('active-word'));
+                
+                const el = document.getElementById('w-' + activeItem.index);
+                if (el) {{
+                    el.classList.add('active-word');
+                    el.scrollIntoView({{behavior: 'smooth', block: 'center'}});
+                }}
             }}
-
-            window.stopReader = function() {{
-                clearInterval(timer);
-                area.innerHTML = "{js_text}";
+        }};
+        
+        // Clique na palavra para pular o audio
+        const words = document.querySelectorAll('.word');
+        words.forEach(w => {{
+            w.onclick = function() {{
+                const idx = parseInt(this.id.split('-')[1]);
+                const data = timestamps.find(t => t.index === idx);
+                if(data) player.currentTime = data.start;
+                player.play();
             }}
-        </script>
-        """, unsafe_allow_html=True)
+        }});
+    </script>
+    """, unsafe_allow_html=True)
 
-# Footer
-st.markdown("<br><p style='text-align:center; color:#444c56;'>Pro Reader v2.0 | IA Neural Speech</p>", unsafe_allow_html=True)
+elif not uploaded_file:
+    st.info("Aguardando arquivo PDF...")
